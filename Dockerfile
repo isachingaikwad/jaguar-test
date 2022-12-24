@@ -1,21 +1,15 @@
-FROM ubuntu:18.04
+FROM node:10
 
-ARG AWS_CLI_VERSION=1.16.86
+# Create app directory
+WORKDIR /usr/src/app
 
-RUN apt-get update -y && \
-    apt-get install python-dev python-pip wget unzip openssh-client -y && \
-    pip install --upgrade awscli==${AWS_CLI_VERSION}
+# Install app dependencies
+COPY package*.json ./
 
-COPY ./app /app
+RUN npm install
 
-ENV AWS_ACCESS_KEY_ID=my-key-id \
-    AWS_SECRET_ACCESS_KEY=my-secret-access-key \
-    AWS_DEFAULT_REGION=eu-west-1 \
-    AWS_BASE_AMI_ID=Base-AMI-Id \
-    AWS_PUBLIC_SUBNET_ID=subnet-id \
-	
-WORKDIR /app
+# Bundle app source
+COPY . .
 
-CMD /usr/local/bin/packer build -var subnet_id=$AWS_PUBLIC_SUBNET_ID /packer/xl-ami.json
-
-#docker run -e AWS_ACCESS_KEY_ID=my-key-id -e AWS_SECRET_ACCESS_KEY=my-secret-access-key -e AWS_PUBLIC_SUBNET_ID=subnet-id malaka:latest
+EXPOSE 8080
+CMD [ "node", "index.js" ]
